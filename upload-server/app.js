@@ -67,31 +67,19 @@ app.post('/merge', async (req, res) => {
     return
   }
   const [fileName, chunkIndex] = hash.split('-')
-  console.log(fileName)
   // 创建一个可写流
   const fileWriteStream = fs.createWriteStream(
     path.resolve(__dirname, `./file/${fileName}`)
   )
-  // 切片目录
+  // 获取切片目录下的所有切片文件名
   const script = fs.readdirSync(
     path.resolve(__dirname, `./file/chunk-${fileName}`)
   )
-  // 目标文件
+  // 目标文件夹
   const targetFile = path.resolve(__dirname, `./file/chunk-${fileName}`)
 
-  const mergeRes = streamMerge(script, fileWriteStream, targetFile)
-
-  if (mergeRes) {
-    res.send({
-      code: 1,
-      message: '合并成功',
-    })
-  } else {
-    res.send({
-      code: 0,
-      message: '合并失败',
-    })
-  }
+  const mergeRes = await streamMerge(script, fileWriteStream, targetFile)
+  res.send(mergeRes)
 })
 
 app.listen(port, () => {
