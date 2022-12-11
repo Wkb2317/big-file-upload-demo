@@ -1,7 +1,7 @@
 import SparkMD5 from "spark-md5";
 
 // 计算文件hash值
-export const getHash = (file, SIZE) => {
+export const getHash = (file, SIZE, cb) => {
   const blobSlice =
     File.prototype.slice ||
     File.prototype.mozSlice ||
@@ -20,6 +20,9 @@ export const getHash = (file, SIZE) => {
 
   const promise = new Promise((resolve) => {
     fileReader.onload = function (e) {
+      const progress = ((currentChunk + 1) / chunks) * 100;
+      console.log(progress);
+      cb(progress);
       console.log("read chunk nr", currentChunk + 1, "of", chunks);
       spark.append(e.target.result); // Append array buffer
       currentChunk++;

@@ -3,6 +3,7 @@
     <Input id="file" type="file" @change="onChange" style="width: 300px" />
     <Button @click="handleUpload" type="primary">点击上传</Button>
   </div>
+  <a-progress v-if="hashProgress > 0" :percent="hashProgress" />
   <a-progress v-if="fileChunkData.length > 0" :percent="totalProgress" />
   <a-table :dataSource="dataSource" :columns="columns">
     <template #bodyCell="{ column, record }">
@@ -39,10 +40,15 @@ const fileChunkData = ref([]);
 const dataSource = ref([]);
 const uploadFinishedNumber = ref(0);
 const totalProgress = ref(0);
+const hashProgress = ref(0);
 
 const onChange = (e) => {
   const [file] = e.target.files;
   currentFile.value = file;
+};
+
+const getHashProgress = (progress) => {
+  hashProgress.value = progress;
 };
 
 // 点击上传按钮
@@ -50,7 +56,7 @@ const handleUpload = async () => {
   if (!currentFile.value) return;
 
   // 校验文件hash值
-  const hashRes = await getHash(currentFile.value, SIZE);
+  const hashRes = await getHash(currentFile.value, SIZE, getHashProgress);
   if (hashRes.code) {
     let res = await axios({
       url: "/api/checkFileIsUploaded",
