@@ -35,12 +35,12 @@ app.post('/upload', (req, res) => {
     const hashName = hash.split('-')[0]
     // 临时路径
     const { path: oldPath } = chunk
-    // chunk临时存储路径
+    // chunk-hash临时存储路径
     const chunkDir = path.resolve(__dirname, `./file/chunk-${hashName}`)
     if (!fs.existsSync(chunkDir)) {
       fs.mkdirSync(chunkDir)
     }
-
+    // 这里虽然叫rename，其实可以达到文件移动并且重命名的功能
     fs.renameSync(
       oldPath,
       path.resolve(__dirname, `./file/chunk-${hashName}/` + hash)
@@ -75,7 +75,7 @@ app.post('/merge', async (req, res) => {
   )
   // 获取切片目录下的所有切片文件名
   const script = fs.readdirSync(path.resolve(__dirname, `./file/chunk-${hash}`))
-  // 目标文件夹
+  // 最终目标文件
   const targetFile = path.resolve(__dirname, `./file/chunk-${hash}`)
 
   const mergeRes = await streamMerge(script, fileWriteStream, targetFile)
@@ -85,17 +85,25 @@ app.post('/merge', async (req, res) => {
   res.send(mergeRes)
 })
 
+/**
+ * 检测文件是否上传过
+ */
 app.get('/checkFileIsUploaded', (req, res) => {
   const { hash } = req.query
   console.log(req.params)
   const fileDir = fs.readdirSync('./file')
-
+  let someDirName = ''
   let flag = false
   for (let i = 0; i < fileDir.length; i++) {
     const fileHash = fileDir[i].split('.')[0]
+    const chunkName = fileDir[i].split('-')[1]
     console.log(fileHash)
     if (hash === fileHash) {
       flag = true
+      break
+    }
+    if (chunkName === hash) {
+      someDirName = `chunk-${hash}`
       break
     }
   }
@@ -103,6 +111,18 @@ app.get('/checkFileIsUploaded', (req, res) => {
     res.send({
       code: 1,
       message: '文件已上传过',
+    })
+    return
+  }
+  if (someDirName) {
+    const chunkDir = fs.readdirSync(`./file/${someDirName}`).sort((a, b) => {
+      return a > b
+    })
+    console.log(chunkDir)
+    res.send({
+      code: 2,
+      message: '文件未上传完整',
+      index: parseInt(chunkDir[chunkDir.length - 1].split('-')[1]) + 1,
     })
     return
   }

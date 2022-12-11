@@ -23,6 +23,7 @@ module.exports = function streamMerge(
   fileWriteStream,
   sourceFileDirectory
 ) {
+  // 这里用promise来实现同步传
   return new Promise(async (resolve, reject) => {
     while (scripts.length > 0) {
       const currentFile = path.resolve(
