@@ -5,14 +5,14 @@
       <Button @click="handleUpload" type="primary">点击上传</Button>
 
       <Button style="margin-left: 20px" @click="handleStopUpload" type="primary"
-        >暂停上传</Button
-      >
+        >暂停上传
+      </Button>
       <Button
         style="margin-left: 20px"
         @click="handleStartUpload"
         type="primary"
-        >继续上传</Button
-      >
+        >继续上传
+      </Button>
     </div>
   </div>
   <a-progress v-if="hashProgress > 0" :percent="hashProgress" />
@@ -20,8 +20,8 @@
   <a-table :dataSource="dataSource" :columns="columns">
     <template #bodyCell="{ column, record }">
       <template v-if="column.key === 'progress'">
-        <a-progress :percent="record.progress"
-      /></template>
+        <a-progress :percent="record.progress" />
+      </template>
     </template>
   </a-table>
 </template>
@@ -30,7 +30,7 @@
 import { message, Button, Input } from "ant-design-vue";
 import { ref } from "vue";
 import axios from "axios";
-import { getHash } from "./utils/getHash";
+import { getHashByWasm } from "./utils/getHash";
 
 // 切片大小
 const SIZE = 10 * 1024 * 1024;
@@ -77,7 +77,10 @@ const getHashProgress = (progress) => {
 const handleUpload = async () => {
   if (!currentFile.value) return;
   // 获取文件hash值
-  const hashRes = await getHash(currentFile.value, SIZE, getHashProgress);
+  const hashRes = await getHashByWasm(currentFile.value, getHashProgress);
+  // const hashRes = await getHash(currentFile.value, SIZE, getHashProgress);
+  console.log(hashRes);
+
   if (hashRes.code) {
     // 校验文件是否上传过
     let res = await axios({
